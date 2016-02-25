@@ -14,34 +14,41 @@ var dateTest = function() {
     var dateArr = ['31.june.1992', '31-october-2015' ,'12 october 1980', '30 12 1999', '2606 2006']
 
     for(i =0; i < dateArr.length; i++) {
-        console.log(date.test(dateArr[i]));
+        console.log(dateArr[i]+ ' - ' + date.test(dateArr[i]));
     }
 }
-
-//dateTest();
+console.log('\n');
+console.log('Data Test');
+dateTest();
+console.log('\n');
 
 var emailTest = function() {
     var emailArr = ['some@mail.com', 'something@mail.ru' ,'denis@yandex.ua', '<script>@safas' , 'somethingbad@']
     for(x =0; x < emailArr.length; x++) {
-        console.log(email.test(emailArr[x]));
+        console.log( emailArr[x] + ' - ' +email.test(emailArr[x]));
     }
-}
-
- // emailTest();
+};
+  console.log('email Test');
+  emailTest();
+  console.log('\n');
 
 var numberTest = function() {
-    var numlArr = ['+380936641068','(+380) 50 664 10 68' , '(+380 93 664 10 68' , '+393 93 664 10 68' , '380 93 664 10 68' ]
-    for(x =0; x < numlArr.length; x++) {
-        console.log(number.test(numlArr[x]));
+    var numbArr = ['+380936641068','(+380) 50 664 10 68' , '(+380 93 664 10 68' , '+393 93 664 10 68' , '380 93 664 10 68' ]
+    for(x =0; x < numbArr.length; x++) {
+        var newNum = numbArr[x].replace(/[\s\-]/g, '');
+        console.log( newNum + ' - ' + number.test(newNum));
     }
-}
-//numberTest();
+};
+console.log('Number Test');
+numberTest();
+console.log('\n');
 
 var htmlTest = function() {
     var htmlArr = ['<div>Something...</div>' , '<p>Enother content ..</p>' , '<mark>123456789</mark>' ,
                    '<div>You forget put / in -> <div>' , '<div>You forget write /div']
     for(x =0; x < htmlArr.length; x++) {
-        console.log(html.test(htmlArr[x]));
+        console.log(htmlArr[x] + ' - ' + html.test(htmlArr[x]));
     }
 }
-//htmlTest();
+console.log('Html Test');
+htmlTest();
