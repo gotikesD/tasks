@@ -35,7 +35,7 @@ var emailTest = function() {
 var numberTest = function() {
     var numbArr = ['+380936641068','(+380) 50 664 10 68' , '(+380 93 664 10 68' , '+393 93 664 10 68' , '380 93 664 10 68' ]
     for(x =0; x < numbArr.length; x++) {
-        var newNum = numbArr[x].replace(/[\s\-]/g, '');
+        var newNum = numbArr[x].replace(/[^\+\d]/g, '');
         console.log( newNum + ' - ' + number.test(newNum));
     }
 };
