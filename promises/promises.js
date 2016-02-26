@@ -12,14 +12,14 @@ var files = ['example1' , 'example2' ,'example3'];
 
 _.forEach(files, function (item) {
     promises.push(  new Promise(function(resolve,reject){
-        fs.createReadStream(`${item}.vs`)
-            .on('error',function(){
-                reject('Error when we try to read file');
+        fs.createReadStream(`${item}.csv`)
+            .on('error',function(err){
+                reject(err);
             })
             .pipe(csvConverter)
             .pipe(fs.createWriteStream(`${item}.json`))
-            .on('error',function(){
-            reject('Error when we try to write file');
+            .on('error',function(err){
+                reject(err);
             })
             .on('finish',function(){
                 resolve();
