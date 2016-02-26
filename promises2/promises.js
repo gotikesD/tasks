@@ -1,0 +1,43 @@
+'use strict';
+
+
+//1. В каждой обработке файла нужно выводить результат
+//2. Один csv-файл делаем нечитаемым
+//3. Второй json-файл делаем незаписываемым (например, путь к нему неправильный)
+//4. В результате обработки всех промисов выводим итог: какие удалось обработать, а какие - нет, и почему
+
+var fs = require('fs');
+var _ = require('lodash');
+var Q = require('q');
+var Converter = require("csvtojson").Converter;
+var csvConverter = new Converter();
+
+
+var promises = [];
+var files = ['example1' , 'example2' ,'example3'];
+
+_.forEach(files, function (item) {
+    promises.push(  new Promise(function(resolve,reject){
+        var write = fs.createWriteStream(`${item}.json`)
+        fs.createReadStream(`${item}.csv`)
+            .on('error',function(err){
+                reject(err);
+            })
+            .pipe(csvConverter)
+            .pipe(write).on('error',function(err){
+               reject(err);
+
+            })
+            .on('finish',function(){
+                resolve('I am a ' + `${item}.json` +' All is ok');
+            })
+        })
+    )});
+
+Q.allSettled(promises)
+    .then(
+        mes => console.log(mes)
+    )
+    .catch(
+        error => console.log(error)
+    )
