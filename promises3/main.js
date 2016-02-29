@@ -65,10 +65,7 @@ Q.all(promises)
             var bookGet = resolve[0];
             var authorGet = resolve[1];
             var descrGet = resolve[2];
-
-
             descrGet.forEach(function(item){
-                console.log(item.idA);
                 var current = authorGet[item.idA].firstname + ' ' +  authorGet[item.idA].lastname;
                 bookGet[item.idb].author = current;
 
