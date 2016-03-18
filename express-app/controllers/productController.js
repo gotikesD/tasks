@@ -11,10 +11,10 @@ var productController = function(req,res) {
     var priceTo = req.query.to;
 
     if(keyTitle) {
-        var formTitle = new RegExp(keyTitle);
+        var formTitle = new RegExp(keyTitle , 'i');
     }
     if(keyDescription) {
-        var formDescr = new RegExp(keyDescription);
+        var formDescr = new RegExp(keyDescription , 'i');
     }
     var priceBegin = +priceFrom;
     var priceEnd = +priceTo;

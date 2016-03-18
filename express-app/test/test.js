@@ -4,28 +4,36 @@ var product = require('../routes/product.js');
 
 var should = require('should');
 var supertest = require('supertest');
+var server = supertest.agent('http://localhost:3000');
+var users = require('../routes/users');
 
 
-describe('Connection', function() {
-    var db = new Connection,
-        tobi = new User('tobi'),
-        loki = new User('loki'),
-        jane = new User('jane');
+    describe('Some test' , function(){
 
-    beforeEach(function(done) {
-        db.clear(function(err) {
-            if (err) return done(err);
-            db.save([tobi, loki, jane], done);
+        it('Try get Home page' , function(done){
+            server
+                .get('/')
+                .expect(200)
+                .end(function(err,res){
+                    res.status.should.equal(200);
+                    done();
+                });
         });
-    });
 
-    describe('#find()', function() {
-        it('respond with matching records', function(done) {
-            db.find({type: 'User'}, function(err, res) {
-                if (err) return done(err);
-                res.should.have.length(3);
-                done();
-            });
-        });
+        it('Try get unresolved page', function (done) {
+            server
+                .get('/cofee')
+                .expect(404)
+                .end(function(err,res) {
+                    res.status.should.equal(404);
+                    done()
+                })
+
+        })
+
+        it('Read responce test ', function (done) {
+            supertest(users)
+                .get('/')
+                .expect(/Hello world/,done)
+        })
     });
-});

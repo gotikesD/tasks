@@ -16,82 +16,91 @@ const regTitle = /<span id="productTitle" class="a-size-large">.+<\/span>/g;
 const regDesc = /<span class="a-list-item">[^<]*<\/span>/g;
 const imgRegular = /http:\/\/ecx\.images-amazon\.com\/images\/I\/[a-z|0-9]{11}\.*\.jpg/gi;
 
-var str = 'sadasd';
 
 var memjs = require('memjs')
 var client = memjs.Client.create();
-var str = 'sss';
 
 
-
-var searchController = function(req,res) {
+var searchController = function (req, res) {
     var keyword = req.params.keyword;
     let keywordDB = new itemDataBase({
         keyword: keyword,
-        updated : new Date()
+        updated: new Date()
     });
-    keywordDB.save(function(err) {
+    keywordDB.save(function (err) {
 
-        if(err) throw new Error(err.message);
+        if (err) throw new Error(err.message);
     });
 
-    function MyConstr(url) {
+
+    var writingInMemory = function(data,arr,itemArr,count,whatDo) {
+        var p = new MyConstr(data);
+        arr.push(p);
+        var itemData = new itemDataBase({
+            product: {
+                price: p.price,
+                description: p.description,
+                title: p.title,
+                images: p.img,
+                created: new Date(),
+            }
+        });
+        itemData.save(function (err) {
+            if (err) throw new Error(err.message);
+            count++;
+            if (count == itemArr.length) {
+                whatDo(arr)
+            }
+        })
+    };
+
+
+    function MyConstr(file) {
 
         this.price = getPrice();
         this.title = getTitle();
         this.description = getDescription();
         this.img = getImg();
 
-
-
-        function selfFile(){
-            var files = fs.readFileSync('./cache/cached_'+md5(url) + '.html');
-            return files.toString();
-        };
-
         function getTitle() {
-            var file = selfFile();
             let title = file.match(regTitle);
-            if(title) {
-                title.forEach((item,  index) => {
-                    title[index] = item.slice(45,-7);
+            if (title) {
+                title.forEach((item, index) => {
+                    title[index] = item.slice(45, -7);
                 })
             }
             return title;
-        };
+        }
 
         function getDescription() {
-            var file = selfFile();
             let description = file.match(regDesc);
-            if(description) {
-                description.forEach((item,  index) => {
-                    description[index] = item.slice(27,-7);
+            if (description) {
+                description.forEach((item, index) => {
+                    description[index] = item.slice(27, -7);
                 });
             }
 
             return description;
-        };
+        }
 
         function getImg() {
-            var file = selfFile();
             let img = file.match(imgRegular);
             let sortedImages = _.sortedUniq(img);
             return sortedImages;
-        };
+        }
 
-        function getPrice(){
-            var file = selfFile();
+        function getPrice() {
+
             let price = file.match(regPrice) || 0;
-            if(price) {
+            if (price) {
                 price.forEach((item, index) => {
-                    price[index] = item.slice(68,-7);
+                    price[index] = item.slice(68, -7);
                 });
             }
             return Number(price).toFixed(2);
         }
 
     }
-
 
 
     processHTML(amazonUrl + keyword);
@@ -101,6 +110,9 @@ var searchController = function(req,res) {
         getFile()
             .then(parsingDeals)
             .then(workWithFile)
+            .then((array) => {
+                return array
+            })
             .then(writingToJson)
             .then(resEnd)
             .catch((error) => {
@@ -109,101 +121,87 @@ var searchController = function(req,res) {
 
         function getFile() {
 
-           var getTry = client.get('mainPage' , function(err,val) {
-
-                console.log(val.toString())});
-                return val.toString();
-
-
             return new Promise((resolve, reject) => {
-                request(
-                    {
-                        method: 'GET',
-                        uri: url,
-                        headers: {
-                            'User-Agent': 'Chrone'
-                        }
-                    },
-                    function (error, response, page) {
-                        if (error) {
-                            reject(new Error('Page not found'));
-                            return;
-                        }
 
-                        let fullUrl = new itemDataBase({
-                            url: url
+                var getTry = function () {
+
+                    client.get(url + 'html1', function (err, val) {
+                        if (val != null) {
+                            resolve(val.toString());
+                        } else {
+                            request(
+                                {
+                                    method: 'GET',
+                                    uri: url,
+                                    headers: {
+                                        'User-Agent': 'request'
+                                    }
+                                },
+                                function (error, response, page) {
+                                    if (error) {
+                                        reject(new Error('Page not found'));
+                                        return;
+                                    }
+
+                                    let fullUrl = new itemDataBase({
+                                        url: url
+                                    });
+                                    fullUrl.save(function (err) {
+                                        if (err) throw new Error(err.message);
+                                    });
+
+
+                                    client.set(url + 'html1', page, function (err, val) {
+                                    }, 600);
+                                    resolve(page);
+
+                                })
+                            }
                         });
-                        fullUrl.save(function(err) {
-                            if(err) throw new Error(err.message);
-                        });
-
-
-                        //client.set('mainPage', page, function(err, val) {
-                        //}, 600);
-
-                        resolve(page);
-
-                    })
-            })
-
-        }
+                    }();
+                });
+            }
 
         function parsingDeals(page) {
             let findedItems = page.match(REGULAR);
-
             var arrOfItems = _.sortedUniq(findedItems);
-            arrOfItems.forEach((item) => {
-                var file = './cache/cached_' + md5(item) + '.html';
-                fs.open(file, "r+", function (err) {
-                    if (err) {
-                        request({
-                            method: 'GET',
-                            uri: item,
-                            headers: {
-                                'User-Agent': 'Chrome'
-                            }
-
-                        }).pipe(
-                            fs.createWriteStream('./cache/cached_' + md5(item) + '.html')
-                        )
-                    } else {
-                        return;
-                    }
-
-                });
-            });
             return arrOfItems;
         }
 
         function workWithFile(arrOfItems) {
-            var test = [];
-            arrOfItems.forEach((item) => {
-                try {
-                    var p = new MyConstr(item);
-                    test.push(p);
-                    item = new itemDataBase({
-                        product : {
-                            price: p.price,
-                            description: p.description,
-                            title: p.title ,
-                            images : p.img,
-                            created: new Date(),
+            return new Promise((resolve, reject) => {
+                var test = [];
+                var counter = 0;
+                arrOfItems.forEach((item, index) => {
+                    client.get(item, function (err, res, val) {
+                        if (!res) {
+                            request({
+                                    method: 'GET',
+                                    uri: item,
+                                    headers: {
+                                        'User-Agent': 'request'
+                                    }
+                                },
+                                function (error, response, page) {
+                                    client.set(item, page, function (err, val) {
+                                        counter++;
+                                        writingInMemory(page,test,arrOfItems,counter,resolve)
+                                    }, 600);
+                                })
+                        } else {
+                            counter++;
+                            writingInMemory(res.toString(),test,arrOfItems,counter,resolve)
                         }
+                    })
+                });
+            })
 
-                    });
-                }
-                catch(e) {console.log(e.message)}
-                item.save(function(err){
-                    if(err) throw new Error(err.message)
-                })
-            });
-            return test;
         }
 
-        function writingToJson(test){
-            return new Promise( (resolve,reject) => {
-                fs.writeFile('./json/items.json', JSON.stringify(test, null ,2 ) , function(err) {
-                    if(err) throw new Error();
+        function writingToJson(test) {
+            return new Promise((resolve, reject) => {
+                fs.writeFile('./json/items.json', JSON.stringify(test, null, 2), function (err) {
+                    if (err) throw new Error();
                     resolve()
                 });
 
