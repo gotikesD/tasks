@@ -1,0 +1,33 @@
+"use strict";
+
+var User = require('../models/schema');
+var md5 = require('md5');
+
+var usersPath = function(req,res) {
+
+
+    User.findOne({
+        email : req.body.email
+    }, (err, user) =>{
+        if (err) throw err;
+        if(!user) {
+            res.end('We do not have such Email!!!!!!');
+        } else if(user) {
+            User.findOneAndUpdate(
+                {email: req.body.email},
+                {$set:{ lastName: req.body.last ,
+                    firstName : req.body.first,
+                    password : md5(req.body.password),
+                    updatedAt : new Date()}},function(err ,doc){
+                    if(err){
+                        console.log("Something wrong when updating data!");
+                    } else {
+                        res.json(doc)
+                    }
+                });
+        }
+    });
+};
+
+
+module.exports = usersPath;
