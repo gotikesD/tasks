@@ -134,7 +134,7 @@ var searchController = function (req, res) {
                                     method: 'GET',
                                     uri: url,
                                     headers: {
-                                        'User-Agent': 'request'
+                                        'User-Agent': 'Chrome'
                                     }
                                 },
                                 function (error, response, page) {
@@ -179,7 +179,7 @@ var searchController = function (req, res) {
                                     method: 'GET',
                                     uri: item,
                                     headers: {
-                                        'User-Agent': 'request'
+                                        'User-Agent': 'Chrome'
                                     }
                                 },
                                 function (error, response, page) {
