@@ -1,0 +1,46 @@
+"use strict";
+
+var User = require('../models/schema');
+var md5 = require('md5');
+var jwt = require('jsonwebtoken');
+
+// Middleware for checking user email and pass(existing in DB)
+var correctUserCheck = require('../middleware/correctUser');
+
+var session = {
+    sessionPost : (req, res) => {
+            if(correctUserCheck(req,res)) {
+                var pass = md5(req.body.password);
+                User.findOne({ email : req.body.email , password : pass})
+                    .exec((err,doc) => {
+                        if(err) throw err;
+                        if(doc) {
+                            var token = jwt.sign({email : req.body.email}, '123');
+                            res.status(200).json({token})
+                        } else {
+                            res.end('We do not have such User!')
+                        }
+                });
+            } else {
+                res.end('We do not have User with such email or password!')
+            }
+    } ,
+
+    sessionGet : (req,res) => {
+        let authorization = req.headers.authorization;
+        if(!authorization) {
+            res.end('Sorry, you do not have Token!')
+        }
+            let token = authorization.slice(7);
+            let decoded = jwt.verify(token, '123');
+            let email = decoded.email;
+            User.findOne({email : email})
+                .exec((err,doc) => {
+                    res.json(doc)
+                })
+    }
+}
+
+
+
+module.exports = session;

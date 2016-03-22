@@ -1,0 +1,64 @@
+"use strict";
+
+var User = require('../models/schema');
+var md5 = require('md5');
+var validator = require('validator');
+
+// Checking data when try create user
+var corUpData = require('../middleware/corUpData');
+
+// Checking data when try update user
+var correctPatch = require('../middleware/correctPatch');
+
+var user = {
+    userPatch : (req,res) => {
+                    correctPatch(req,res)
+                    .then(() => {
+                        User.findOneAndUpdate(
+                            {email: req.body.email},
+                            {$set:{ lastName: req.body.last ,
+                                firstName : req.body.first,
+                                password : md5(req.body.password),
+                                updatedAt : new Date()}})
+                            .exec(function(err){
+                                if(err){
+                                    console.log("Something wrong when updating data!");
+                                    throw err;
+                                } else {
+                                    res.send('Updated!')
+                                }
+                            });
+                    })
+                    .catch((err) => {
+                        res.end(err)
+                    })
+                },
+
+    userPost : (req,res) => {
+        if(corUpData(req,res)){
+            var user = new User({
+                firstName: req.body.first,
+                lastName: req.body.last,
+                email : req.body.email,
+                DOB : req.body.dob,
+                password : md5(req.body.password),
+                createdAt: new Date()
+            });
+                user.save((err) => {
+                    if(err) throw  err;
+                });
+                res.json(user)
+            }
+        },
+
+    userGet : (req,res) => {
+        User.find({})
+            .exec((err,users) => {
+                res.json(users)
+            })
+    }
+}
+
+
+
+module.exports =user;

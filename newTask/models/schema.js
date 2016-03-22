@@ -9,7 +9,7 @@ var itemDataBaseSchema = new Schema({
     firstName : String,
     lastName : String,
     DOB : String,
-    lastLogger : String,
+    lastLogin : String,
     createdAt: Date,
     updatedAt: Date,
     status : {
