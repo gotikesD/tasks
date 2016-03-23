@@ -2,63 +2,150 @@
 
 var User = require('../models/schema');
 var md5 = require('md5');
-var validator = require('validator');
-
-// Checking data when try create user
-var corUpData = require('../middleware/corUpData');
-
-// Checking data when try update user
-var correctPatch = require('../middleware/correctPatch');
+var util = require('util')
 
 var user = {
-    userPatch : (req,res) => {
-                    correctPatch(req,res)
-                    .then(() => {
-                        User.findOneAndUpdate(
-                            {email: req.body.email},
-                            {$set:{ lastName: req.body.last ,
-                                firstName : req.body.first,
-                                password : md5(req.body.password),
-                                updatedAt : new Date()}})
-                            .exec(function(err){
-                                if(err){
-                                    console.log("Something wrong when updating data!");
-                                    throw err;
-                                } else {
-                                    res.send('Updated!')
-                                }
-                            });
-                    })
-                    .catch((err) => {
-                        res.end(err)
-                    })
+    userPatch: (req, res, next) => {
+        req.check({
+            email : {
+                notEmpty: true,
+                isEmail: {
+                    errorMessage: 'Invalid Email'
+                }
+            },
+            first: {
+                isLength: {
+                    options: [{min: 2, max: 10}],
+                    errorMessage: 'Must be between 2 and 10 chars long'
                 },
+                errorMessage: 'Invalid First Name'
+            },
+            last: {
+                isLength: {
+                    options: [{min: 2, max: 10}],
+                    errorMessage: 'Must be between 2 and 10 chars long'
+                },
+                errorMessage: 'Invalid Last Name'
+            },
+            password: {
+                isLength: {
+                    options: [{min: 6, max: 10}],
+                    errorMessage: 'Must be between 6 and 10 chars long'
+                },
+                errorMessage: 'Invalid Password Name'
+            }
+        });
 
-    userPost : (req,res) => {
-        if(corUpData(req,res)){
+        if (req.validationErrors()) {
+            next(new Error('Validation Error:  ' + util.inspect(req.validationErrors())));
+            return;
+        } else {
+            User.findOneAndUpdate(
+                {email: req.body.email},
+                {
+                    $set: {
+                        lastName: req.body.last,
+                        firstName: req.body.first,
+                        password: md5(req.body.password),
+                        updatedAt: new Date(),
+                        'address.country': req.body.country,
+                        'address.city' : req.body.city,
+                        'notes.note1' : req.body.notes,
+                    }
+                })
+                .then((data) => {
+                    if(!data){
+                        next(new Error('Sorry,we do not have user with such email ' + req.body.email))
+                    } else {
+                        res.json(data)
+                    }
+
+                })
+                .catch((err) => {
+                    next(new Error((err.message)))
+                });
+        }
+    },
+
+    userPost: (req, res, next) => {
+        req.check({
+            email : {
+                notEmpty: true,
+                isEmail: {
+                    errorMessage: 'Invalid Email'
+                }
+            },
+            first: {
+                isLength: {
+                    options: [{min: 2, max: 10}],
+                    errorMessage: 'Must be between 2 and 10 chars long'
+                },
+                errorMessage: 'Invalid First Name'
+            },
+            last: {
+                isLength: {
+                    options: [{min: 2, max: 10}],
+                    errorMessage: 'Must be between 2 and 10 chars long'
+                },
+                errorMessage: 'Invalid Last Name'
+            },
+            password: {
+                isLength: {
+                    options: [{min: 6, max: 10}],
+                    errorMessage: 'Must be between 6 and 10 chars long'
+                },
+                errorMessage: 'Invalid PASSWORD Name'
+            } ,
+            dob: {
+                isLength: {
+                    options: [10] ,
+                    errorMessage: 'Write your date in format 1990-10-10'
+                },
+                errorMessage: 'Invalid DOB'
+            }
+        });
+
+        if (req.validationErrors()) {
+            next(new Error('Validation Error:  ' + util.inspect(req.validationErrors())));
+            return;
+        }  else {
             var user = new User({
                 firstName: req.body.first,
                 lastName: req.body.last,
-                email : req.body.email,
-                DOB : req.body.dob,
-                password : md5(req.body.password),
-                createdAt: new Date()
+                email: req.body.email,
+                DOB: req.body.dob,
+                password: md5(req.body.password),
+                address : {
+                    country : req.body.country,
+                    city : req.body.city,
+                    zip : req.body.zip
+                },
+                createdAt: new Date(),
+                notes : {
+                    note1 : req.body.notes,
+                    note2 : new Date()
+                }
             });
-                user.save((err) => {
-                    if(err) throw  err;
-                });
+            user.save()
+            .then((user) => {
                 res.json(user)
-            }
-        },
+            })
+            .catch((err) => {
+                next(new Error((err.message)))
+            })
+        }
+    },
 
-    userGet : (req,res) => {
+    userGet: (req, res,next) => {
         User.find({})
-            .exec((err,users) => {
+            .then(users => {
                 res.json(users)
+            })
+            .catch((err) => {
+                next(new Error((err.message)))
             })
     }
 }
 
 
-
-module.exports =user;
+module.exports = user;

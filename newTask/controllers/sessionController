@@ -3,44 +3,58 @@
 var User = require('../models/schema');
 var md5 = require('md5');
 var jwt = require('jsonwebtoken');
-
-// Middleware for checking user email and pass(existing in DB)
-var correctUserCheck = require('../middleware/correctUser');
+var util = require('util');
 
 var session = {
-    sessionPost : (req, res) => {
-            if(correctUserCheck(req,res)) {
-                var pass = md5(req.body.password);
-                User.findOne({ email : req.body.email , password : pass})
-                    .exec((err,doc) => {
-                        if(err) throw err;
-                        if(doc) {
-                            var token = jwt.sign({email : req.body.email}, '123');
-                            res.status(200).json({token})
-                        } else {
-                            res.end('We do not have such User!')
-                        }
-                });
-            } else {
-                res.end('We do not have User with such email or password!')
+    sessionPost: (req, res, next) => {
+        req.check({
+            email: {
+                notEmpty: true,
+                isEmail: {
+                    errorMessage: 'Invalid Email'
+                }
+            },
+            password: {
+                isLength: {
+                    options: [{min: 6, max: 10}],
+                    errorMessage: 'Must be between 6 and 10 chars long'
+                },
+                errorMessage: 'Invalid PASSWORD Name'
             }
-    } ,
-
-    sessionGet : (req,res) => {
-        let authorization = req.headers.authorization;
-        if(!authorization) {
-            res.end('Sorry, you do not have Token!')
+        })
+        if (req.validationErrors()) {
+            next(new Error('Validation Error:  ' + util.inspect(req.validationErrors())));
+        } else {
+            User.findOne({
+                email: req.body.email,
+                password: md5(req.body.password)
+            }, (err,user) => {
+                if (!user) {
+                    next(new Error('We do not have such Email or wrong password'));
+                } else if (user) {
+                    var pass = md5(req.body.password);
+                    User.findOne({email: req.body.email, password: pass})
+                        .then((user) => {
+                            var token = jwt.sign(user, '123');
+                            res.status(200).json({token})
+                        })
+                        .catch(err => {
+                            next(err)
+                        })
+                }
+            })
         }
-            let token = authorization.slice(7);
-            let decoded = jwt.verify(token, '123');
-            let email = decoded.email;
-            User.findOne({email : email})
-                .exec((err,doc) => {
-                    res.json(doc)
-                })
-    }
-}
+    },
 
+    sessionGet: (req, res) => {
+        res.json({
+            success: true,
+            message: "Current user info",
+            name: req.decoded._doc.firstName + ' ' + req.decoded._doc.lastName,
+            email: req.decoded._doc.email
+        })
+    }
+};
 
 
 module.exports = session;
