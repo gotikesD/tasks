@@ -28,21 +28,18 @@ var session = {
             User.findOne({
                 email: req.body.email,
                 password: md5(req.body.password)
-            }, (err,user) => {
-                if (!user) {
-                    next(new Error('We do not have such Email or wrong password'));
-                } else if (user) {
-                    var pass = md5(req.body.password);
-                    User.findOne({email: req.body.email, password: pass})
-                        .then((user) => {
-                            var token = jwt.sign(user, '123');
-                            res.status(200).json({token})
-                        })
-                        .catch(err => {
-                            next(err)
-                        })
-                }
             })
+             .then((user) => {
+                 if(!user) {
+                     next( new Error('We do not have such Email or wrong password'))
+                 } else {
+                     var token = jwt.sign(user, '123');
+                     res.status(200).json({token})
+                 }
+             })
+              .catch( err => {
+                  next(err);
+              })
         }
     },
 
