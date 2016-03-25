@@ -1,0 +1,14 @@
+
+require('../config/passport-google');
+var passport = require('passport');
+
+
+module.exports = {
+    firstStep : passport.authenticate('google', { scope: ['profile','email']}),
+
+    secondStep :  passport.authenticate('google', {
+        successRedirect: '/session/facebook/success',
+        failureRedirect: '/session/facebook/error'
+    })
+};
+

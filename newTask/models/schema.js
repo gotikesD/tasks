@@ -1,6 +1,5 @@
 var mongoose = require('mongoose');
 
-
 mongoose.connect('mongodb://localhost/tokenUsers');
 var Schema = mongoose.Schema;
 
@@ -26,8 +25,23 @@ var itemDataBaseSchema = new Schema({
         note1: Schema.Types.Mixed,
         note2: Schema.Types.Mixed
     } ,
-    password : String
+    password : String,
+    facebook : {
+        id : String,
+        token : String,
+        email : String,
+        name : String
+    }
 });
+
+itemDataBaseSchema.pre('update', function () {
+    this._update = flat(this._update);
+});
+
+
+itemDataBaseSchema.methods.validPassword = function( pwd ) {
+    return ( this.password === pwd );
+};
 
 var itemDataBase = mongoose.model('itemDataBase', itemDataBaseSchema);
 

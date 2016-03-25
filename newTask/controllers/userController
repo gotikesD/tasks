@@ -2,7 +2,9 @@
 
 var User = require('../models/schema');
 var md5 = require('md5');
-var util = require('util')
+var util = require('util');
+
+
 
 var user = {
     userPatch: (req, res, next) => {
@@ -46,7 +48,11 @@ var user = {
 
                     } else {
                         for (var field in User.schema.paths) {
-                            if ((field !== '_id') && (field !== '__v') && (field !== 'createdAt')) {
+                            if ((field !== '_id') &&
+                                (field !== '__v') &&
+                                (field !== 'createdAt') &&
+                                (field !== 'updatedAt')) {
+
                                 if (req.body[field] !== undefined) {
                                     user[field] = req.body[field];
                                 }
@@ -110,6 +116,7 @@ var user = {
                 firstName: req.body.first,
                 lastName: req.body.last,
                 email: req.body.email,
+                clientID : req.body.clientID ,
                 DOB: req.body.dob,
                 password: md5(req.body.password),
                 address : {
