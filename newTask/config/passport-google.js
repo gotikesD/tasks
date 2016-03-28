@@ -1,8 +1,7 @@
 "use strict";
 
-var User = require('../models/schema');
 var passport = require('passport')
-    , GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
+var GoogleStrategy = require( 'passport-google-oauth2' ).Strategy;
 
 
 passport.serializeUser(function(user, done) {
@@ -14,17 +13,16 @@ passport.deserializeUser(function(obj, done) {
 });
 
 passport.use(new GoogleStrategy({
-        clientID: '588667797186-4ektui56p8f66qmlsdc9vkepcptmv8f8.apps.googleusercontent.com',
+        clientID:     '588667797186-4ektui56p8f66qmlsdc9vkepcptmv8f8.apps.googleusercontent.com',
         clientSecret: 'ps-8UNTP9qblJTEXaLrMKFYF',
-        callbackURL: "http://localhost:3000/session/google/callback"
+        callbackURL: "http://localhost:3000/session/google/callback",
+        passReqToCallback   : true
     },
-    function(accessToken, refreshToken, profile, done) {
-        process.nextTick(function() {
-            console.log(profile)
-            done(null, profile);
-        })
-    })
-)
+    function(request, accessToken, refreshToken, profile, done) {
+
+            return done(null, profile);
+    }
+));
 
 
 

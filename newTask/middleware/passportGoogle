@@ -4,11 +4,12 @@ var passport = require('passport');
 
 
 module.exports = {
-    firstStep : passport.authenticate('google', { scope: ['profile','email']}),
+    firstStep : passport.authenticate('google', { scope: [  'https://www.googleapis.com/auth/plus.login',
+                                                            'https://www.googleapis.com/auth/plus.profile.emails.read']}),
 
     secondStep :  passport.authenticate('google', {
-        successRedirect: '/session/facebook/success',
-        failureRedirect: '/session/facebook/error'
+        successRedirect: '/session/google/success',
+        failureRedirect: '/session/google/error'
     })
 };
 
